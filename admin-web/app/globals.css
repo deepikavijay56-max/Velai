@@ -71,7 +71,8 @@ select {
 }
 
 .primary-btn,
-.ghost-btn {
+.ghost-btn,
+.danger-btn {
   border: none;
   border-radius: 999px;
   padding: 11px 18px;
@@ -89,9 +90,77 @@ select {
   color: var(--navy);
 }
 
+.danger-btn {
+  background: var(--danger-soft);
+  color: #b91c1c;
+}
+
+.primary-btn:disabled,
+.ghost-btn:disabled,
+.danger-btn:disabled {
+  cursor: wait;
+  opacity: 0.55;
+}
+
+.header-actions,
+.actions-cell,
+.flagged-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.login-shell {
+  max-width: 560px;
+  padding-top: 10vh;
+}
+
+.login-panel h1 {
+  font-size: 2rem;
+  margin-bottom: 10px;
+}
+
+.login-help {
+  color: var(--muted);
+  line-height: 1.5;
+  margin-bottom: 20px;
+}
+
+.admin-form {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.admin-form label {
+  color: var(--muted);
+  font-size: 0.85rem;
+  font-weight: 700;
+}
+
+.admin-form input {
+  width: 100%;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  padding: 12px;
+  color: var(--text);
+  background: white;
+}
+
+.success-message,
+.dev-otp,
+.error-message {
+  margin-top: 14px;
+  line-height: 1.5;
+}
+
+.success-message { color: #065f46; }
+.dev-otp { color: #92400e; font-weight: 700; }
+.error-message { color: #b91c1c; }
+
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(180px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
   gap: 18px;
   margin-bottom: 24px;
 }
@@ -246,6 +315,16 @@ th {
   color: var(--muted);
 }
 
+.flagged-copy {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+}
+
+.flagged-copy small {
+  overflow-wrap: anywhere;
+}
+
 .severity.high {
   background: var(--danger-soft);
   color: var(--danger);
@@ -257,7 +336,6 @@ th {
 }
 
 @media (max-width: 900px) {
-  .stats-grid,
   .content-grid {
     grid-template-columns: 1fr 1fr;
   }
@@ -266,12 +344,13 @@ th {
 @media (max-width: 640px) {
   .topbar,
   .panel-header,
-  .list-item {
+  .list-item,
+  .header-actions,
+  .flagged-actions {
     flex-direction: column;
     align-items: flex-start;
   }
 
-  .stats-grid,
   .content-grid {
     grid-template-columns: 1fr;
   }

@@ -27,9 +27,12 @@ COLLEGE_ID="psg-tech"
 COLLEGE_NAME="PSG College of Technology"
 COLLEGE_EMAIL_DOMAIN="psgtech.ac.in"
 DATABASE_URL="sqlite+aiosqlite:///./velai.db"
-MOCK_OTP=True
-DEFAULT_TEST_OTP="123456"
+JWT_SECRET=change-me
+DEV_MODE=False
+DEV_OTP_CODE=change-me
+ADMIN_INITIAL_CODE=change-me
 ```
+Replace the JWT and admin-code placeholders with local values. Production requires a `JWT_SECRET` of at least 32 characters. Development OTP overrides are disabled by default; for local OTP testing, set `DEV_MODE=True` and configure `DEV_OTP_CODE` in the ignored `backend/.env`.
 
 ### 3. Run Database Migrations & Load Seed Data
 From the `backend/` directory:
@@ -61,7 +64,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/auth/request-otp \
   -H "Content-Type: application/json" \
   -d '{"email": "student@psgtech.ac.in"}'
 ```
-*Note: In development (`MOCK_OTP=True`), the code is logged directly to the server console and accepts `123456`.*
+*Note: In development, when `DEV_MODE=True`, the configured development OTP is returned by the OTP endpoint and logged. Never enable development mode in production.*
 
 ### 2. Verify OTP & Obtain JWT
 ```bash
@@ -69,7 +72,7 @@ curl -X POST http://127.0.0.1:8000/api/v1/auth/verify-otp \
   -H "Content-Type: application/json" \
   -d '{
     "email": "student@psgtech.ac.in",
-    "otp_code": "123456",
+    "otp_code": "<the dev_mock_otp returned by the request endpoint>",
     "name": "Kavitha Raman",
     "department": "Computer Science",
     "year": 3,

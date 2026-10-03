@@ -1,6 +1,7 @@
+from typing import List
 from datetime import datetime, timezone
 from fastapi import APIRouter, Depends, HTTPException, status
-from sqlalchemy import select
+from sqlalchemy import or_, select
 from sqlalchemy.ext.asyncio import AsyncSession
 from sqlalchemy.orm import selectinload
 
@@ -15,15 +16,14 @@ from app.schemas.contract import ContractRead
 router = APIRouter(prefix="/contracts", tags=["Contracts & Agreements"])
 
 
-@router.get("/{contract_id}", response_model=ContractRead, summary="Get contract agreement details")
-async def get_contract(
-    contract_id: str,
+@router.get("/mine", response_model=List[ContractRead], summary="List contracts for the current user")
+async def list_my_contracts(
     db: AsyncSession = Depends(get_db),
     current_user: User = Depends(get_current_user),
 ):
     stmt = (
         select(Contract)
-        .where(Contract.id == contract_id)
+        .where(or_(Contract.poster_id == current_user.id, Contract.doer_id == current_user.id))
         .options(
             selectinload(Contract.poster),
             selectinload(Contract.doer),
@@ -31,20 +31,10 @@ async def get_contract(
             selectinload(Contract.payment),
             selectinload(Contract.gig),
         )
+        .order_by(Contract.created_at.desc())
     )
-    res = await db.execute(stmt)
-    contract = res.scalar_one_or_none()
-    if not contract:
-        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contract not found")
-
-    if (
-        current_user.id != contract.poster_id
-        and current_user.id != contract.doer_id
-        and current_user.role != "admin"
-    ):
-        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
-
-    return contract
+    result = await db.execute(stmt)
+    return result.scalars().all()
 
 
 @router.get("/by-gig/{gig_id}", response_model=ContractRead, summary="Get contract by gig ID")
@@ -68,6 +58,38 @@ async def get_contract_by_gig(
     contract = res.scalar_one_or_none()
     if not contract:
         raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contract not found for this gig")
+
+    if (
+        current_user.id != contract.poster_id
+        and current_user.id != contract.doer_id
+        and current_user.role != "admin"
+    ):
+        raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Access denied")
+
+    return contract
+
+
+@router.get("/{contract_id}", response_model=ContractRead, summary="Get contract agreement details")
+async def get_contract(
+    contract_id: str,
+    db: AsyncSession = Depends(get_db),
+    current_user: User = Depends(get_current_user),
+):
+    stmt = (
+        select(Contract)
+        .where(Contract.id == contract_id)
+        .options(
+            selectinload(Contract.poster),
+            selectinload(Contract.doer),
+            selectinload(Contract.deliverables),
+            selectinload(Contract.payment),
+            selectinload(Contract.gig),
+        )
+    )
+    res = await db.execute(stmt)
+    contract = res.scalar_one_or_none()
+    if not contract:
+        raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Contract not found")
 
     if (
         current_user.id != contract.poster_id

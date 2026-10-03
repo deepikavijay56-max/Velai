@@ -59,16 +59,13 @@ async def request_otp(
     db.add(otp_record)
     await db.commit()
 
-    # Log OTP in development
-    print(f"\n=======================================================")
-    print(f" [VELAI AUTH] OTP for {email}: >>> {otp_code} <<< (valid for 10 min)")
-    print(f"=======================================================\n")
-    logger.info("Generated OTP for %s: %s", email, otp_code)
+    if settings.DEV_MODE:
+        logger.info("Generated development OTP for %s: %s", email, otp_code)
 
     return {
         "message": f"Verification code sent to {email}",
         "email": email,
-        "dev_mock_otp": otp_code if settings.MOCK_OTP else None,
+        "dev_mock_otp": otp_code if settings.DEV_MODE else None,
     }
 
 
@@ -93,8 +90,12 @@ async def verify_otp(
     result = await db.execute(stmt)
     otp_record = result.scalars().first()
 
-    # Allow default test OTP in development/mock mode
-    is_valid_dev_otp = settings.MOCK_OTP and payload.otp_code.strip() == settings.DEFAULT_TEST_OTP
+    # Allow a configured development OTP only when development mode is enabled.
+    is_valid_dev_otp = (
+        settings.DEV_MODE
+        and settings.DEV_OTP_CODE is not None
+        and payload.otp_code.strip() == settings.DEV_OTP_CODE
+    )
 
     if not otp_record and not is_valid_dev_otp:
         raise HTTPException(

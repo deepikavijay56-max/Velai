@@ -11,10 +11,11 @@ async def run_checks():
         assert res.status_code == 200
 
         # 2. Auth: Poster (Club lead)
-        await client.post("/api/v1/auth/request-otp", json={"email": "lead@psgtech.ac.in"})
+        otp_res = await client.post("/api/v1/auth/request-otp", json={"email": "lead@psgtech.ac.in"})
+        poster_otp = otp_res.json()["dev_mock_otp"]
         res = await client.post("/api/v1/auth/verify-otp", json={
             "email": "lead@psgtech.ac.in",
-            "otp_code": "123456",
+            "otp_code": poster_otp,
             "name": "Arun Kumar",
             "department": "Mechanical",
             "year": 4,
@@ -25,10 +26,11 @@ async def run_checks():
         print("2. Poster authenticated:", res.json()["user"]["name"])
 
         # 3. Auth: Doer (Freelance student)
-        await client.post("/api/v1/auth/request-otp", json={"email": "doer@psgtech.ac.in"})
+        otp_res = await client.post("/api/v1/auth/request-otp", json={"email": "doer@psgtech.ac.in"})
+        doer_otp = otp_res.json()["dev_mock_otp"]
         res = await client.post("/api/v1/auth/verify-otp", json={
             "email": "doer@psgtech.ac.in",
-            "otp_code": "123456",
+            "otp_code": doer_otp,
             "name": "Priya Sundaram",
             "department": "Design",
             "year": 2,

@@ -1,6 +1,6 @@
-import os
-from typing import List, Union
-from pydantic import AnyHttpUrl, field_validator
+from typing import List
+
+from pydantic import model_validator
 from pydantic_settings import BaseSettings, SettingsConfigDict
 
 
@@ -18,14 +18,14 @@ class Settings(BaseSettings):
     DATABASE_URL: str = "sqlite+aiosqlite:///./velai.db"
 
     # Security & JWT
-    SECRET_KEY: str = "change-me"
+    JWT_SECRET: str | None = None
     ALGORITHM: str = "HS256"
     ACCESS_TOKEN_EXPIRE_MINUTES: int = 1440  # 24 hours
     REFRESH_TOKEN_EXPIRE_DAYS: int = 30
 
     # OTP Auth
-    MOCK_OTP: bool = True
-    DEFAULT_TEST_OTP: str = "123456"
+    DEV_MODE: bool = False
+    DEV_OTP_CODE: str | None = None
 
     # Rate limits & safety
     MAX_PUSH_NOTIFICATIONS_PER_DAY: int = 3
@@ -36,7 +36,7 @@ class Settings(BaseSettings):
 
     # Admin superuser bootstrap
     ADMIN_EMAIL: str = "admin@psgtech.ac.in"
-    ADMIN_INITIAL_CODE: str = "change-me"
+    ADMIN_INITIAL_CODE: str | None = None
 
     # CORS
     CORS_ORIGINS: List[str] = [
@@ -52,6 +52,15 @@ class Settings(BaseSettings):
         env_file_encoding="utf-8",
         extra="ignore",
     )
+
+    @model_validator(mode="after")
+    def require_jwt_secret_in_production(self):
+        if self.ENVIRONMENT.lower() == "production":
+            if not self.JWT_SECRET or len(self.JWT_SECRET) < 32:
+                raise ValueError(
+                    "JWT_SECRET must be set to at least 32 characters when ENVIRONMENT is production"
+                )
+        return self
 
 
 settings = Settings()

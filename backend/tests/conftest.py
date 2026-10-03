@@ -1,4 +1,5 @@
 import os
+import secrets
 import sys
 import pytest
 import pytest_asyncio
@@ -38,6 +39,13 @@ async def override_get_db() -> AsyncGenerator[AsyncSession, None]:
 app.dependency_overrides[get_db] = override_get_db
 
 
+@pytest.fixture(autouse=True)
+def enable_development_otp_for_tests(monkeypatch):
+    """Configure a per-test OTP without relying on local environment defaults."""
+    monkeypatch.setattr(settings, "DEV_MODE", True)
+    monkeypatch.setattr(settings, "DEV_OTP_CODE", f"{secrets.randbelow(1_000_000):06d}")
+
+
 @pytest_asyncio.fixture
 async def client() -> AsyncGenerator[httpx.AsyncClient, None]:
     transport = httpx.ASGITransport(app=app)
@@ -51,7 +59,7 @@ async def poster_client(client: httpx.AsyncClient) -> httpx.AsyncClient:
     await client.post("/api/v1/auth/request-otp", json={"email": "club.poster@psgtech.ac.in"})
     res = await client.post("/api/v1/auth/verify-otp", json={
         "email": "club.poster@psgtech.ac.in",
-        "otp_code": "123456",
+        "otp_code": settings.DEV_OTP_CODE,
         "name": "Karthik Club Lead",
         "department": "Mechanical",
         "year": 4,
@@ -71,7 +79,7 @@ async def doer_client(client: httpx.AsyncClient) -> httpx.AsyncClient:
         await d_client.post("/api/v1/auth/request-otp", json={"email": "freelancer@psgtech.ac.in"})
         res = await d_client.post("/api/v1/auth/verify-otp", json={
             "email": "freelancer@psgtech.ac.in",
-            "otp_code": "123456",
+            "otp_code": settings.DEV_OTP_CODE,
             "name": "Pooja Designer",
             "department": "Computer Science",
             "year": 3,
@@ -90,7 +98,7 @@ async def admin_client(client: httpx.AsyncClient) -> httpx.AsyncClient:
         await a_client.post("/api/v1/auth/request-otp", json={"email": settings.ADMIN_EMAIL})
         res = await a_client.post("/api/v1/auth/verify-otp", json={
             "email": settings.ADMIN_EMAIL,
-            "otp_code": "123456",
+            "otp_code": settings.DEV_OTP_CODE,
             "name": "Dean Admin",
             "role": "admin"
         })

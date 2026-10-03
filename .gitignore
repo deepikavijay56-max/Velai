@@ -23,6 +23,7 @@ wheels/
 venv/
 ENV/
 *.db
+*.sqlite
 *.sqlite3
 
 # Environment

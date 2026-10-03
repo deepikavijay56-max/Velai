@@ -1,5 +1,6 @@
 import pytest
 import httpx
+from app.core.config import settings
 
 
 @pytest.mark.asyncio
@@ -26,7 +27,7 @@ async def test_otp_verify_success(client: httpx.AsyncClient):
     await client.post("/api/v1/auth/request-otp", json={"email": "arun@psgtech.ac.in"})
     res = await client.post("/api/v1/auth/verify-otp", json={
         "email": "arun@psgtech.ac.in",
-        "otp_code": "123456",
+        "otp_code": settings.DEV_OTP_CODE,
         "name": "Arun Kumar",
         "department": "Mechanical",
         "year": 4,
@@ -39,6 +40,25 @@ async def test_otp_verify_success(client: httpx.AsyncClient):
     assert data["token_type"] == "bearer"
     assert data["user"]["college_email"] == "arun@psgtech.ac.in"
     assert data["user"]["college_id"] == "psg-tech"
+
+
+@pytest.mark.asyncio
+async def test_otp_verify_uses_otp_code_field(client: httpx.AsyncClient):
+    """The login contract accepts otp_code and rejects the obsolete code key."""
+    await client.post("/api/v1/auth/request-otp", json={"email": "login@psgtech.ac.in"})
+
+    old_contract = await client.post("/api/v1/auth/verify-otp", json={
+        "email": "login@psgtech.ac.in",
+        "code": settings.DEV_OTP_CODE,
+    })
+    assert old_contract.status_code == 422
+
+    current_contract = await client.post("/api/v1/auth/verify-otp", json={
+        "email": "login@psgtech.ac.in",
+        "otp_code": settings.DEV_OTP_CODE,
+    })
+    assert current_contract.status_code == 200
+    assert current_contract.json()["access_token"]
 
 
 @pytest.mark.asyncio

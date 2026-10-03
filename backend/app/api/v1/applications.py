@@ -184,6 +184,7 @@ async def accept_application(
             selectinload(Contract.doer),
             selectinload(Contract.deliverables),
             selectinload(Contract.payment),
+            selectinload(Contract.gig),
         )
     )
     full_contract = (await db.execute(c_stmt)).scalar_one()

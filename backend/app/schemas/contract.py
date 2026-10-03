@@ -15,6 +15,14 @@ class ContractUserSummary(BaseModel):
     model_config = {"from_attributes": True}
 
 
+class ContractGigSummary(BaseModel):
+    id: str
+    title: str
+    status: str
+
+    model_config = {"from_attributes": True}
+
+
 class DeliverableCreate(BaseModel):
     file_url: str = Field(..., description="Uploaded file URL or link")
     note: Optional[str] = None
@@ -67,6 +75,7 @@ class ContractRead(BaseModel):
     created_at: datetime
     poster: Optional[ContractUserSummary] = None
     doer: Optional[ContractUserSummary] = None
+    gig: Optional[ContractGigSummary] = None
     deliverables: List[DeliverableRead] = []
     payment: Optional[PaymentRecordRead] = None
 
